@@ -41,6 +41,7 @@ import org.springframework.stereotype.Component;
 import com.cloud.api.ApiDBUtils;
 import com.cloud.api.query.vo.UserVmJoinVO;
 import com.cloud.gpu.GPU;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.service.ServiceOfferingDetailsVO;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
@@ -197,7 +198,12 @@ public class UserVmJoinDaoImpl extends GenericDaoBaseWithTagInformation<UserVmJo
             // stats calculation
             VmStats vmStats = ApiDBUtils.getVmStatistics(userVm.getId());
             if (vmStats != null) {
-                userVmResponse.setCpuUsed(new DecimalFormat("#.##").format(vmStats.getCPUUtilization()) + "%");
+
+                if (userVm.getHypervisorType() != null && userVm.getHypervisorType().equals(HypervisorType.VMware)) {
+                    userVmResponse.setCpuUsed(new DecimalFormat("#.##").format((vmStats.getCPUUtilization()/userVm.getSpeed())*100) + "%");
+                } else {
+                    userVmResponse.setCpuUsed(new DecimalFormat("#.##").format(vmStats.getCPUUtilization()) + "%");
+                }
                 userVmResponse.setNetworkKbsRead((long)vmStats.getNetworkReadKBs());
                 userVmResponse.setNetworkKbsWrite((long)vmStats.getNetworkWriteKBs());
                 userVmResponse.setDiskKbsRead((long)vmStats.getDiskReadKBs());
